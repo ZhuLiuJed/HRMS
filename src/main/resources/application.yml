@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    username: root
+    password: dwj159874632
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://172.16.150.82:3306/db_hrms
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  thymeleaf:
+    cache: false
+
+logging:
+  level:
+    root: warn
+    org:
+      springframework.security: debug
+      hibernate: error
+server:
+  error:
+    path: /error
+
+
+
+
+

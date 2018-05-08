@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+	<head>
+		<meta charset="UTF-8" />
+		<title>培训记录</title>
+		<link rel="stylesheet" th:href="@{/plugins/layui/css/layui.css}" media="all" />
+		<link rel="stylesheet" th:href="@{/css/global.css}" media="all" />
+		<link rel="stylesheet" th:href="@{/plugins/font-awesome/css/font-awesome.min.css}" />
+		<link rel="stylesheet" th:href="@{/css/table.css}" />
+	</head>
+
+	<body>
+		<div class="admin-main">
+			<fieldset class="layui-elem-field">
+				<legend>数据列表</legend>
+				<div class="layui-field-box layui-form">
+					<div id="content" class="layui-collapse" lay-accordion="lay-accordion"></div>
+				</div>
+			</fieldset>
+			<div class="admin-table-page">
+				<div id="paged" class="page">
+				</div>
+			</div>
+		</div>
+		<!--模板-->
+		<script type="text/html" id="tpl">
+			{{# layui.each(d.list, function(index, item){
+			var list = item.userInfoList;
+			var str = '';
+			str += '<div class="layui-colla-content" style="padding: 0"><table data-id="'+item.training.id+'" style="margin:0" class="layui-table admin-table"><thead><tr><th>姓名</th><th>性别</th><th>年龄</th><th>操作</th></tr></thead>';
+
+			for (var idx in list){
+				str += '<tr>';
+				str += ('<td>' + list[idx].name + '</td>');
+				str += ('<td>' + list[idx].age + '</td>');
+				str += ('<td>' + list[idx].sex + '</td>');
+				str += '<td><a href="javascript:;" data-id="'+list[idx].id+'" data-name="'+item.training.id+'" data-opt="del" class="layui-btn layui-btn-danger layui-btn-mini">删除记录</a></td>';
+				str += '</tr>';
+			}str = str + '</table></div>';
+			}}
+			<div class="layui-colla-item">
+				<h2 class="layui-colla-title">培训类型：{{ item.training.type }} | {{  item.training.formatBeginTime }} ~  {{  item.training.formatEndTime }}
+					<div class="layui-input-inline" style="float:right">
+						<a href="javascript:;" class="layui-btn" data-opt="add" data-id="{{ item.training.id }}">
+							<i class="layui-icon">&#xe608;</i> 添加信息
+						</a>
+					</div>
+				</h2>
+				{{ str }}
+			</div>
+			{{# }); }}
+		</script>
+		<script type="text/javascript" th:src="@{/plugins/layui/layui.js}"></script>
+		<script type="text/javascript" th:src="@{/js/jquery-1.12.2.min.js}"></script>
+		<script type="text/javascript" th:src="@{/js/jquery-ui.js}"></script>
+		<script type="text/javascript" th:src="@{/js/jquery.formFill.js}"></script>
+		<script>
+			//通用
+            var addBoxIndex = -1;
+            var title_add = "新增培训记录";
+            var url_list = '/training/training-record-list';
+            var url_add = '/training/training-record-add';
+            var url_delete = '/training/training-record-delete';
+            var url_form = '/form/edit-training-record.html';
+            var page_size = 88888;
+
+            //特殊
+			var url_not_training_userinfos = '/training/not-training-userinfos';
+            var paging, layer, form, element;
+
+			function addListToOptions(list){
+                var html = "";
+                for (var index in list){
+                    html += ('<option value="'+list[index].id+'">'+list[index].name+'</option>');
+                }
+                $("#name").append(html);
+			}
+
+            function addTr(list, userInfoId, trainingId){
+			    var idx;
+			    for (var i in list){
+			        if (list[i].id == userInfoId){
+			            idx = i;
+			            break;
+					}
+				}
+				var lastTr = $('table[data-id='+trainingId+']:last-child');
+                lastTr.append('<tr><td>'+list[idx].name+'</td><td>'+list[idx].age+'</td><td>'+list[idx].sex+'</td><td><a href="javascript:;" data-id="'+list[idx].id+'" data-name="'+trainingId+'" data-opt="del" class="layui-btn layui-btn-danger layui-btn-mini">删除记录</a></td></tr>');
+                addDelClick($('table[data-id='+trainingId+']').children(':last').children(':last'));
+            }
+
+            function addDelClick(btn){
+                var $that = btn;
+                $that.children('td:last-child').children('a[data-opt=del]').on('click', function() {
+                    //layer.msg($(this).data('id'));
+                    var trainingId = $(this).data('name');
+                    var userInfoId = $(this).data('id');
+                    layer.confirm('确认删除?',{
+                        btn: ['删除','取消']
+                    }, function(index){
+                        var data = {
+                            userInfoId: userInfoId,
+                            trainingId: trainingId
+                        };
+                        var d = JSON.stringify(data);
+                        $.ajax({
+                            type: 'delete',
+                            contentType:'application/json',
+                            url: url_delete,
+                            data: d,
+                            success: function(msg) {
+                                layer.close(index);
+                                $that.remove();
+                            }
+                        });
+                    });
+                });
+			}
+			//
+			layui.config({
+				base: '/js/'
+			});
+
+			layui.use(['paging', 'form', 'element'], function() {
+				paging = layui.paging();
+				layer = layui.layer; //获取当前窗口的layer对象
+				form = layui.form();
+				element = layui.element();
+
+				paging.init({
+					url: url_list, //地址
+					elem: '#content', //内容容器
+					type: 'GET',
+					tempElem: '#tpl', //模块容器
+					pageConfig: { //分页参数配置
+						elem: '#paged', //分页容器
+						pageSize: page_size //分页大小
+					},
+					fail: function(msg) { //获取数据失败的回调
+						//alert('获取数据失败')
+					},
+					complate: function() {
+                        element.init();
+                        //绑定所有删除按钮事件
+                        $('#content tr').each(function() {
+                            var $that = $(this);
+                            addDelClick($that);
+                        });
+                        //点击添加按钮
+                        $('a[data-opt=add]').each(function(){
+                            $(this).on('click', function() {
+
+                                var id = $(this).data('id');
+                                if(addBoxIndex !== -1)
+                                    return;
+                                //本表单通过ajax加载 --以模板的形式，当然你也可以直接写在页面上读取
+                                $.get(url_form, null, function(form) {
+                                    addBoxIndex = layer.open({
+                                        type: 1,
+                                        title: title_add,
+                                        content: form,
+                                        btn: ['保存', '取消'],
+                                        shade: false,
+                                        offset: ['100px', '30%'],
+                                        area: ['300px', '400px'],
+                                        zIndex: 1975,
+                                        maxmin: true,
+                                        yes: function(index) {
+                                            //触发表单的提交事件
+                                            $('form.layui-form').find('button[lay-filter=edit]').click();
+                                        },
+                                        full: function(elem) {
+                                            var win = window.top === window.self ? window : parent.window;
+                                            $(win).on('resize', function() {
+                                                var $this = $(this);
+                                                elem.width($this.width()).height($this.height()).css({
+                                                    top: 0,
+                                                    left: 0
+                                                });
+                                                elem.children('div.layui-layer-content').height($this.height() - 95);
+                                            });
+                                        },
+                                        success: function(layero, index) {
+                                            //弹出窗口成功后渲染表单
+											var ulist;
+                                            var form = layui.form();
+                                            $.ajax({
+                                                type: 'get',
+                                                contentType:'application/json',
+												data: {
+                                                  id: id
+												},
+                                                url: url_not_training_userinfos,
+                                                success: function(data) {
+                                                    ulist = data;
+                                                    addListToOptions(data);
+                                                    form.render();
+                                                }
+                                            });
+                                            form.on('submit(edit)', function(data) {
+                                                var jsonData = {
+                                                    trainingId: id,
+                                                    userInfoId: data.field.userInfoId
+												}
+                                                var d = JSON.stringify(jsonData);
+                                                $.ajax({
+                                                    type: 'post',
+                                                    contentType:'application/json',
+                                                    url: url_add,
+                                                    data: d,
+                                                    success: function (message) {
+                                                        layer.close(index);
+                                                        //动态加信息到表中
+														addTr(ulist, jsonData.userInfoId, jsonData.trainingId);
+                                                        form.render();
+                                                    }
+                                                });
+                                                return false;
+                                            });
+                                        },
+                                        end: function() {
+                                            addBoxIndex = -1;
+                                        }
+                                    });
+                                });
+                                return false;
+                            });
+                        });
+					},
+				});
+			});
+		</script>
+	</body>
+
+</html>

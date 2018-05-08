@@ -1,0 +1,56 @@
+<div style="margin: 15px;">
+	<form class="layui-form" id="fm">
+		<div class="layui-form-item">
+			<label class="layui-form-label">姓名</label>
+			<div class="layui-input-block">
+				<input type="text" name="name" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input" />
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">性别</label>
+				<div class="layui-input-block">
+					<input type="radio" name="sex" lay-verify="required" value="男" title="男" checked="checked"/>
+					<input type="radio" name="sex" lay-verify="required" value="女" title="女"/>
+				</div>
+			</div>
+			<div class="layui-inline">
+				<label class="layui-form-label">年龄</label>
+				<div class="layui-input-block">
+					<input type="text" name="age" lay-verify="number|required" placeholder="请输入" autocomplete="off" class="layui-input" />
+				</div>
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">学历</label>
+				<div class="layui-input-block">
+					<select name="education" lay-verify="required">
+						<option value=""></option>
+						<option value="无">无</option>
+						<option value="高中或以下">高中或以下</option>
+						<option value="大专">大专</option>
+						<option value="本科">本科</option>
+						<option value="研究生或以上">研究生或以上</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">邮箱</label>
+				<div class="layui-input-block">
+					<input type="text" name="email" lay-verify="email" placeholder="请输入" autocomplete="off" class="layui-input" />
+				</div>
+			</div>
+			<div class="layui-inline">
+				<label class="layui-form-label">电话</label>
+				<div class="layui-input-block">
+					<input type="text" name="phone" lay-verify="phone" placeholder="请输入" autocomplete="off" class="layui-input" />
+				</div>
+			</div>
+		</div>
+		<button lay-filter="edit" lay-submit style="display: none;"></button>
+	</form>
+</div>

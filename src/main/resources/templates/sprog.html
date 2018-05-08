@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+	<head>
+		<meta charset="UTF-8" />
+		<title>新进员工</title>
+		<link rel="stylesheet" th:href="@{/plugins/layui/css/layui.css}" media="all" />
+		<link rel="stylesheet" th:href="@{/css/global.css}" media="all" />
+		<link rel="stylesheet" th:href="@{/plugins/font-awesome/css/font-awesome.min.css}" />
+		<link rel="stylesheet" th:href="@{/css/table.css}" />
+	</head>
+
+	<body>
+		<div class="admin-main">
+
+			<blockquote class="layui-elem-quote layui-form">
+				<div class="layui-form-item">
+					<div class="layui-input-inline">
+						<select name="type" id="type" lay-filter="type">
+							<option value="">请选择搜索类型</option>
+							<option value="name" selected="selected">根据名字搜索</option>
+							<option value="time_7" >7天新进员工</option>
+							<option value="time_15" >15天新进员工</option>
+						</select>
+					</div>
+					<div class="layui-input-inline">
+						<div class="layui-input-inline">
+							<input type="text" id="value" name="value" lay-verify="value" autocomplete="on" placeholder="请输入查询内容" class="layui-input" />
+						</div>
+					</div>
+					<div class="layui-input-inline">
+						<a href="javascript:;" class="layui-btn" id="search">
+							<i class="layui-icon">&#xe615;</i> 搜索
+						</a>
+					</div>
+				</div>
+			</blockquote>
+			<fieldset class="layui-elem-field">
+				<legend>数据列表</legend>
+				<div class="layui-field-box layui-form">
+					<table class="layui-table admin-table">
+						<thead>
+							<tr>
+								<th>姓名</th>
+								<th>性别</th>
+								<th>年龄</th>
+								<th>学历</th>
+								<th>邮箱</th>
+								<th>电话</th>
+								<th>部门</th>
+								<th>职位</th>
+								<th>入职时间</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+						<tbody id="content">
+						</tbody>
+					</table>
+				</div>
+			</fieldset>
+			<div class="admin-table-page">
+				<div id="paged" class="page">
+				</div>
+			</div>
+		</div>
+		<!--模板-->
+		<script type="text/html" id="tpl">
+			{{# layui.each(d.list, function(index, item){
+			}}
+			<tr>
+				<td>{{ item.name }}</td>
+				<td>{{ item.sex }}</td>
+				<td>{{ item.age }}</td>
+				<td>{{ item.education }}</td>
+				<td>{{ item.email}}</td>
+				<td>{{ item.phone }}</td>
+				<td>{{ item.dept == null ? '' : item.dept.deptName }}</td>
+				<td>{{ item.position == null ? '' : item.position.positionName }}</td>
+				<td>{{ item.formatJoinedDate }}</td>
+				<td>
+					<a href="javascript:;" data-id="{{ item.id }}" data-opt="edit" class="layui-btn layui-btn-mini">编辑</a>
+					<a href="javascript:;" data-id="{{ item.id }}" data-name="{{ item.name }}"  data-opt="del" class="layui-btn layui-btn-danger layui-btn-mini">删除</a>
+				</td>
+			</tr>
+			{{# }); }}
+		</script>
+		<script type="text/javascript" th:src="@{/plugins/layui/layui.js}"></script>
+		<script type="text/javascript" th:src="@{/js/jquery-1.12.2.min.js}"></script>
+		<script type="text/javascript" th:src="@{/js/jquery-ui.js}"></script>
+		<script type="text/javascript" th:src="@{/js/jquery.formFill.js}"></script>
+		<script>
+			//通用
+            var addBoxIndex = -1;
+            var title_add = "新增个人信息";
+            var title_update = "修改个人信息";
+            var url_list = '/personnel-deployment/userinfo-list';
+            var url_update = '/personnel-deployment/userinfo-save';
+            var url_delete = '/personnel-deployment/userinfo-delete';
+            var url_form = '/form/edit-sprog-info.html'
+            var page_size = 8;
+            var type = null;
+            var value = null;
+
+            //特殊
+            var url_userinfo_ex = '/personnel-deployment/userinfo-ex-get';
+			function addListToOptions(deptList, positionList){
+                var html = "";
+                for (var index in deptList){
+                    html += ('<option value="'+deptList[index].id+'">'+deptList[index].deptName+'</option>');
+                }
+                $("#dept").append(html);
+                //初始化position_list
+                html = "";
+                for (var index in positionList){
+                    html += ('<option value="'+positionList[index].id+'">'+positionList[index].positionName+'</option>');
+                }
+                $("#position").append(html);
+            }
+
+			//
+			layui.config({
+				base: '/js/'
+			});
+
+			layui.use(['paging', 'form'], function() {
+				var
+					paging = layui.paging(),
+					layer = layui.layer, //获取当前窗口的layer对象
+					form = layui.form();
+              	  form.on('select(type)', function(data){
+                    type = $('#type').val();
+                    if (type!="name"){
+                        $("#value").attr("disabled","true");
+                        $("#value").val('');
+                        $("#value").attr("placeholder",">>>点击搜索>>>");
+
+                    }else {
+                        $("#value").attr("placeholder","请输入查询内容");
+                        $("#value").removeAttr("disabled");
+                    }
+                });
+				paging.init({
+					url: url_list, //地址
+					elem: '#content', //内容容器
+					type: 'GET',
+					tempElem: '#tpl', //模块容器
+					pageConfig: { //分页参数配置
+						elem: '#paged', //分页容器
+						pageSize: page_size //分页大小
+					},
+					fail: function(msg) { //获取数据失败的回调
+						//alert('获取数据失败')
+					},
+					complate: function() {
+
+						//绑定所有编辑按钮事件						
+						$('#content').children('tr').each(function() {
+							var $that = $(this);
+							$that.children('td:last-child').children('a[data-opt=edit]').on('click', function() {
+								var id = $(this).data('id');
+                                if(addBoxIndex !== -1)
+                                    return;
+                                //本表单通过ajax加载 --以模板的形式，当然你也可以直接写在页面上读取
+                                $.get(url_form, null, function(form) {
+                                    addBoxIndex = layer.open({
+                                        type: 1,
+                                        title: title_update,
+                                        content: form,
+                                        btn: ['保存', '取消'],
+                                        shade: false,
+                                        offset: ['100px', '30%'],
+                                        area: ['600px', '400px'],
+                                        zIndex: 1995,
+                                        maxmin: true,
+                                        yes: function(index) {
+                                            //触发表单的提交事件
+                                            $('form.layui-form').find('button[lay-filter=edit]').click();
+                                        },
+                                        full: function(elem) {
+                                            var win = window.top === window.self ? window : parent.window;
+                                            $(win).on('resize', function() {
+                                                var $this = $(this);
+                                                elem.width($this.width()).height($this.height()).css({
+                                                    top: 0,
+                                                    left: 0
+                                                });
+                                                elem.children('div.layui-layer-content').height($this.height() - 95);
+                                            });
+                                        },
+                                        success: function(layero, index) {
+                                            //弹出窗口成功后渲染表单
+                                            var form = layui.form();
+                                            var idData = {
+                                                id: id
+											}
+                                            $.ajax({
+                                                type: 'get',
+                                                contentType:'application/json',
+                                                url: url_userinfo_ex,
+                                                data: idData,
+                                                success: function(data) {
+                                                    addListToOptions(data.deptList, data.positionList);
+                                                    $("#fm").fill(data.userInfo);
+                                                    form.render();
+                                                }
+                                            });
+
+                                            form.on('submit(edit)', function(data) {
+                                                data.field['id'] = id;
+                                                data.field['deptid'] =  data.field['dept.id'];
+                                                data.field['positionid'] = data.field['position.id'];
+                                                delete(data.field['dept.id']);
+                                                delete(data.field['position.id']);
+                                                delete(data.field['age']);
+                                                delete(data.field['education']);
+                                                delete(data.field['name']);
+                                                window.console.log(data.field);
+                                                var d = JSON.stringify(data.field);
+                                                $.ajax({
+                                                    type: 'put',
+                                                    contentType:'application/json',
+                                                    url: url_update,
+                                                    data: d,
+                                                    success: function (message) {
+                                                        layer.close(index);
+                                                        paging.get();
+                                                    }
+                                                });
+                                                form.render();
+                                                return false;
+                                            });
+                                        },
+                                        end: function() {
+                                            addBoxIndex = -1;
+                                        }
+                                    });
+                                });
+							});
+						});
+                        //绑定所有删除按钮事件
+                        $('#content').children('tr').each(function() {
+                            var $that = $(this);
+                            $that.children('td:last-child').children('a[data-opt=del]').on('click', function() {
+                                //layer.msg($(this).data('id'));
+								var id = $(this).data('id')
+                                layer.confirm('确认删除' + $(this).data('name') + ' ?',{
+                                    btn: ['删除','取消']
+								}, function(index){
+                                    var data = {
+										id: id
+									};
+									var d = JSON.stringify(data);
+									$.ajax({
+										type: 'delete',
+										contentType:'application/json',
+										url: url_delete,
+										data: d,
+										success: function(msg) {
+										    layer.close(index);
+                                            paging.get();
+										}
+									});
+                                });
+                            });
+                        });
+					},
+				});
+
+				//点击搜索按钮
+				$('#search').on('click', function() {
+				    value = $('#value').val();
+				    type = $('#type').val();
+				    if (value == null || value.trim() == ''){
+                        paging.init({
+                            params: { //发送到服务端的参数
+                                type: type,
+                                value: ''
+                            }
+                        });
+					} else {
+                        paging.init({
+                            params: { //发送到服务端的参数
+                                type: type,
+                                value: value
+                            }
+                        });
+					}
+				});
+
+			});
+		</script>
+	</body>
+
+</html>

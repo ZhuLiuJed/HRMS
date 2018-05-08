@@ -1,0 +1,22 @@
+<div style="margin: 15px;">
+	<form class="layui-form" id="fm2">
+		<div class="layui-form-item">
+			<label class="layui-form-label">原部门</label>
+			<div class="layui-input-block">
+				<input type="text" name="deptName" readonly="readonly" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input" />
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">合并到</label>
+				<div class="layui-input-block">
+					<select name="dept.id" lay-verify="required" id="dept">
+						<option value=""></option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<button lay-filter="merge" lay-submit style="display: none;"></button>
+	</form>
+
+</div>

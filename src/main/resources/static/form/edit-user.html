@@ -1,0 +1,63 @@
+<div style="margin: 15px;">
+	<form class="layui-form" id="fm">
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">账号名</label>
+				<div class="layui-input-block">
+					<input type="text" name="username" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input" />
+				</div>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label" id="pwdLabel">密码</label>
+				<div class="layui-input-block">
+					<input type="password" id="password" disabled="disabled" name="password" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input" />
+				</div>
+			</div>
+			<div class="layui-inline">
+				<label class="layui-form-label">修改密码</label>
+				<div class="layui-input-block">
+					<input lay-filter="repwd" type="checkbox" id="repwd" name="repwd" lay-skin="switch" lay-text="是|否">
+				</div>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">用户名</label>
+				<div class="layui-input-block">
+					<select name="userInfo.id" lay-verify="required" id="userInfoName">
+						<option value=""></option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">角色名</label>
+				<div class="layui-input-block">
+					<select name="role.id" lay-verify="required" id="roleName">
+						<option value=""></option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<button lay-filter="edit" lay-submit style="display: none;"></button>
+	</form>
+</div>
+<script>
+    layui.use('form', function() {
+        var form = layui.form();
+        form.on('switch(repwd)', function(data){
+            console.log(data.elem.checked); //开关是否开启，true或者false
+            if (data.elem.checked){
+                $('#password').removeAttr("disabled");
+                $('#password').select();
+                is_repwd = true;
+            } else {
+                $('#password').attr("disabled", "disabled");
+                is_repwd = false;
+            }
+        });
+    });
+</script>

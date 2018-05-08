@@ -1,0 +1,46 @@
+<div style="margin: 15px;">
+	<form class="layui-form" id="fm">
+		<div class="layui-form-item">
+			<label class="layui-form-label">原密码</label>
+			<div class="layui-input-inline">
+				<input type="password" id="oldPwd" name="oldPwd" lay-verify="oldPwd" placeholder="请输入" autocomplete="off" class="layui-input" />
+			</div>
+			<div class="layui-form-mid layui-word-aux">请填写6到12位的初始密码</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">新密码</label>
+			<div class="layui-input-inline">
+				<input type="password" id="password" name="password" lay-verify="pass" placeholder="请输入" autocomplete="off" class="layui-input" />
+			</div>
+			<div class="layui-form-mid layui-word-aux">请填写6到12位的新密码</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">重复密码</label>
+			<div class="layui-input-inline">
+				<input type="password" id="repeatPwd" name="repeatPwd" lay-verify="repeatPwd" placeholder="请输入" autocomplete="off" class="layui-input" />
+			</div>
+			<div class="layui-form-mid layui-word-aux">请再次填写新密码</div>
+		</div>
+		<button lay-filter="edit" lay-submit style="display: none;"></button>
+	</form>
+</div>
+<script>
+    layui.use(['form', 'layedit', 'laydate'], function() {
+        var form = layui.form(),
+			$ = layui.jquery,
+            layedit = layui.layedit;
+        //创建一个编辑器
+        var editIndex = layedit.build('LAY_demo_editor');
+        //自定义验证规则
+        form.verify({
+            zIndex: 19960225,
+            oldPwd: [/(.+){6,12}$/, '密码必须6到12位'],
+            pass: [/(.+){6,12}$/, '密码必须6到12位'],
+            repeatPwd: function (value) {
+                if (value != $('#password').val()){
+                    return "两次密码输入不一致！"
+				}
+            }
+        });
+    });
+</script>

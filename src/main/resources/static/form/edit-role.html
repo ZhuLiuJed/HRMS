@@ -1,0 +1,22 @@
+<div style="margin: 15px;">
+	<form class="layui-form" id="fm">
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">角色名</label>
+				<div class="layui-input-block">
+					<input type="text" name="roleName" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input" />
+				</div>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">权限</label>
+			<div class="layui-input-block">
+				<input type="checkbox" name="auths[0].authority" value="AUTH_PPRO" title="个人档案">
+				<input type="checkbox" name="auths[1].authority" value="AUTH_EDTRA" title="教育培训">
+				<input type="checkbox" name="auths[2].authority" value="AUTH_DEPTM" title="部门管理">
+				<input type="checkbox" name="auths[3].authority" value="AUTH_PDEP" title="人事调配">
+			</div>
+		</div>
+		<button lay-filter="edit" lay-submit style="display: none;"></button>
+	</form>
+</div>

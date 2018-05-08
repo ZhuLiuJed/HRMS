@@ -1,0 +1,46 @@
+<div style="margin: 15px;">
+	<form class="layui-form" id="fm">
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">部门</label>
+				<div class="layui-input-block">
+					<select name="dept.id" lay-verify="required" id="dept">
+						<option value=""></option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-inline">
+				<label class="layui-form-label">职位</label>
+				<div class="layui-input-block">
+					<select name="position.id" lay-verify="required" id="position">
+						<option value=""></option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">姓名</label>
+			<div class="layui-input-block">
+				<input type="text" name="name" lay-verify="required" autocomplete="off" class="layui-input" disabled="true " />
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-inline">
+				<label class="layui-form-label">年龄</label>
+				<div class="layui-input-block">
+					<input type="text" name="age" lay-verify="number|required" autocomplete="off" class="layui-input"disabled="true " />
+				</div>
+			</div>
+			<div class="layui-inline">
+				<label class="layui-form-label">学历</label>
+				<div class="layui-input-block">
+					<input type="text" name="education" autocomplete="off" class="layui-input" disabled="true "/>
+				</div>
+			</div>
+		</div>
+
+
+
+		<button lay-filter="edit" lay-submit style="display: none;"></button>
+	</form>
+</div>

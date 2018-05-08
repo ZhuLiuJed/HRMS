@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+	<head>
+		<meta charset="UTF-8" />
+		<title>用户信息</title>
+		<link rel="stylesheet" th:href="@{/plugins/layui/css/layui.css}" media="all" />
+		<link rel="stylesheet" th:href="@{/css/global.css}" media="all" />
+		<link rel="stylesheet" th:href="@{/plugins/font-awesome/css/font-awesome.min.css}" />
+		<link rel="stylesheet" th:href="@{/css/table.css}" />
+	</head>
+
+	<body>
+		<div class="admin-main">
+
+			<blockquote class="layui-elem-quote layui-form">
+				<div class="layui-form-item">
+					<div class="layui-input-inline">
+						<a href="javascript:;" class="layui-btn" id="add">
+							<i class="layui-icon">&#xe608;</i> 添加信息
+						</a>
+					</div>
+					<div class="layui-input-inline">
+						<select name="type" id="type" lay-filter="type">
+							<option value="">请选择搜索类型</option>
+							<option value="name" selected = "selected">根据类型搜索</option>
+							<option value="beginTime" >根据开始时间搜索</option>
+							<option value="endTime" >根据结束时间搜索</option>
+
+						</select>
+					</div>
+					<div class="layui-input-inline" id="selectInput">
+						<div class="layui-input-inline" ><input type="text" id="value" name="value" lay-verify="value" autocomplete="on" placeholder="请输入查询内容" class="layui-input" /></div>					</div>
+					<div class="layui-input-inline" >
+						<a href="javascript:;" class="layui-btn" id="search">
+							<i class="layui-icon">&#xe615;</i> 搜索
+						</a>
+					</div>
+					<div class="layui-input-inline">
+						<a href="javascript:;" class="layui-btn" id="searchTime">
+							<i class="layui-icon">&#xe615;</i> 搜索有效期的合同
+						</a>
+					</div>
+				</div>
+			</blockquote>
+			<fieldset class="layui-elem-field">
+				<legend>数据列表</legend>
+				<div class="layui-field-box layui-form">
+					<table class="layui-table admin-table">
+						<thead>
+							<tr>
+								<th>合同类型</th>
+								<th>员工姓名</th>
+								<th>开始时间</th>
+								<th>结束时间</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+						<tbody id="content">
+						</tbody>
+					</table>
+				</div>
+			</fieldset>
+			<div class="admin-table-page">
+				<div id="paged" class="page">
+				</div>
+			</div>
+		</div>
+		<!--模板-->
+		<script type="text/html" id="tpl">
+			{{# layui.each(d.list, function(index, item){
+			}}
+			<tr>
+				<td>{{ item.type }}</td>
+				<td>{{ item.userInfo == null ? '' : item.userInfo.name }}</td>
+				<td>{{ item.formattimeOfContract }}</td>
+				<td>{{ item.formatexpirationTime }}</td>
+				<td>
+					<a href="javascript:;" data-id="{{ item.id }}" data-opt="edit" class="layui-btn layui-btn-mini">查看并编辑内容</a>
+					<a href="javascript:;" data-id="{{ item.id }}" data-name="{{ item.type }}"  data-opt="del" class="layui-btn layui-btn-danger layui-btn-mini">删除</a>
+				</td>
+			</tr>
+			{{# }); }}
+		</script>
+		<script type="text/javascript" th:src="@{/plugins/layui/layui.js}"></script>
+		<script type="text/javascript" th:src="@{/js/jquery-1.12.2.min.js}"></script>
+		<script type="text/javascript" th:src="@{/js/jquery-ui.js}"></script>
+		<script type="text/javascript" th:src="@{/js/jquery.formFill.js}"></script>
+		<script>
+            var addBoxIndex = -1;
+            var title_add = "新增档案";
+            var title_update = "修改档案";
+            var url_one = '/personal-profile/contract-get';
+            var url_list = '/personal-profile/contract-list';
+            var url_add = '/personal-profile/contract-add';
+            var url_update = '/personal-profile/contract-save';
+            var url_delete = '/personal-profile/contract-delete';
+            var url_form_add = '/form/add-contract.html';
+            var page_size = 10;
+            var type = null;
+            var value = null;
+            var url_userinfo_none_contract= '/personal-profile/userinfo_none_contract';
+            var url_contract_ext_get ='/personal-profile/contract-ex-get'
+            var editIndex;
+            function addListToOptions(userInfos){
+                var html = "";
+                for (var index in userInfos){
+                    html += ('<option value="'+userInfos[index].id+'">'+userInfos[index].name+'</option>');
+                }
+                $("#userInfo").append(html);
+
+            }
+
+            function editInit(){
+                editIndex = layedit.build('LAY_demo_editor', {
+                    tool: [
+                        'strong' //加粗
+                        ,'italic' //斜体
+                        ,'underline' //下划线
+                        ,'del' //删除线
+                        ,'|' //分割线
+                        ,'left' //左对齐
+                        ,'center' //居中对齐
+                        ,'right' //右对齐
+                    ]
+                });
+			}
+
+			layui.config({
+				base: '/js/'
+			});
+
+			layui.use(['paging', 'form','layedit'], function() {
+				var
+
+					paging = layui.paging(),
+					//layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+					layer = layui.layer, //获取当前窗口的layer对象
+					form = layui.form();
+					layedit = layui.layedit;
+				    form.on('select(type)', function(data){
+                    type = $('#type').val();
+
+                    var inputTiem = '<div class="layui-inline" ><input name="value" id="value" class="layui-input" placeholder="选择时间" onclick="layui.laydate({elem: this, festival: true})"/></div>';
+                    var inputName = '<div class="layui-input-inline" ><input type="text" id="value" name="value" lay-verify="value" autocomplete="on" placeholder="请输入查询内容" class="layui-input" /></div>';
+                    if (type!="name"){
+                        $('#selectInput').empty();
+                        $('#selectInput').append(inputTiem);
+                    }else {
+                        $('#selectInput').empty();
+                        $('#selectInput').append(inputName);
+                    }
+                	});
+				paging.init({
+					url: url_list, //地址
+					elem: '#content', //内容容器
+					type: 'GET',
+					tempElem: '#tpl', //模块容器
+					pageConfig: { //分页参数配置
+						elem: '#paged', //分页容器
+						pageSize: page_size //分页大小
+					},
+					fail: function(msg) { //获取数据失败的回调
+						//alert('获取数据失败')
+					},
+					complate: function() { //完成的回调
+						//绑定所有编辑按钮事件
+                        $('#content').children('tr').each(function() {
+                            var $that = $(this);
+                            $that.children('td:last-child').children('a[data-opt=edit]').on('click', function() {
+                                var id = $(this).data('id');
+                                if(addBoxIndex !== -1)
+                                    return;
+                                //本表单通过ajax加载 --以模板的形式，当然你也可以直接写在页面上读取
+                                $.get(url_form_add, null, function(form) {
+                                    addBoxIndex = layer.open({
+                                        type: 1,
+                                        title: title_update,
+                                        content: form,
+                                        btn: ['保存', '取消'],
+                                        shade: false,
+                                        offset: ['100px', '30%'],
+                                        area: ['600px', '400px'],
+                                        zIndex: 1995,
+                                        maxmin: true,
+                                        yes: function(index) {
+                                            //触发表单的提交事件
+                                            $('form.layui-form').find('button[lay-filter=edit]').click();
+                                        },
+                                        full: function(elem) {
+                                            var win = window.top === window.self ? window : parent.window;
+                                            $(win).on('resize', function() {
+                                                var $this = $(this);
+                                                elem.width($this.width()).height($this.height()).css({
+                                                    top: 0,
+                                                    left: 0
+                                                });
+                                                elem.children('div.layui-layer-content').height($this.height() - 95);
+                                            });
+                                        },
+                                        success: function(layero, index) {
+                                            //弹出窗口成功后渲染表单
+                                            var form = layui.form();
+                                            var idData = {
+                                                id: id
+                                            }
+
+                                            //填充表单
+                                            $.ajax({
+                                                type: 'get',
+                                                contentType:'application/json',
+                                                url: url_contract_ext_get,
+                                                data: idData,
+                                                success: function(data) {
+                                                    data.userInfos.push(data.contract.userInfo);
+                                                    addListToOptions(data.userInfos);
+                                                    $("#fm").fill(data.contract);
+                                                    editInit();
+                                                    form.render();
+                                                }
+                                            });
+
+                                            form.on('submit(edit)', function(data) {
+                                                data.field.id = id;
+                                                data.field['userInfo'] = {
+                                                    id: data.field['userInfo.id']
+                                                };
+
+                                                var content = layedit.getContent(editIndex);
+                                                data.field['content'] = content;
+                                                data.field['timeOfContract'] = data.field['formattimeOfContract'];
+                                                data.field['expirationTime'] = data.field['formatexpirationTime'];
+                                                delete (data.field['formattimeOfContract']);
+                                                delete (data.field['formatexpirationTime']);
+                                                delete (data.field['userInfo.id']);
+                                                var d = JSON.stringify(data.field);
+                                                $.ajax({
+                                                    type: 'put',
+                                                    contentType:'application/json',
+                                                    url: url_update,
+                                                    data: d,
+                                                    success: function (message) {
+                                                        layer.close(index);
+                                                        paging.get();
+                                                    }
+                                                });
+                                                form.render();
+                                                return false;
+                                            });
+                                        },
+                                        end: function() {
+                                            addBoxIndex = -1;
+                                        }
+                                    });
+                                });
+                            });
+                        });
+
+                        //绑定所有删除按钮事件
+                        $('#content').children('tr').each(function() {
+                            var $that = $(this);
+                            $that.children('td:last-child').children('a[data-opt=del]').on('click', function() {
+                                //layer.msg($(this).data('id'));
+								var id = $(this).data('id')
+                                layer.confirm('确认删除' + $(this).data('name') + ' ?',{
+                                    btn: ['删除','取消']
+								}, function(index){
+                                    var data = {
+										id: id
+									};
+									var d = JSON.stringify(data);
+									$.ajax({
+										type: 'delete',
+										contentType:'application/json',
+										url: url_delete,
+										data: d,
+										success: function(msg) {
+										    layer.close(index);
+											paging.get();
+										}
+									});
+                                });
+                            });
+                        });
+					},
+				});
+                //点击有效培训搜索按钮
+                $('#searchTime').on('click', function() {
+                    var date = new Date();
+                    type = 'after'
+                    value  =date;
+                    paging.init({
+                        params: { //发送到服务端的参数
+                            type: type,
+                            value: value
+                        }
+                    });
+                });
+				//点击搜索按钮
+				$('#search').on('click', function() {
+				    value = $('#value').val();
+				    type = $('#type').val();
+				    if (value == null || value.trim() == ''){
+                        paging.init({
+                            params: { //发送到服务端的参数
+                                type: '',
+                                value: ''
+                            }
+                        });
+					} else {
+                        paging.init({
+                            params: { //发送到服务端的参数
+                                type: type,
+                                value: value
+                            }
+                        });
+					}
+				});
+
+                //点击添加按钮
+				$('#add').on('click', function() {
+					if(addBoxIndex !== -1)
+						return;
+					//本表单通过ajax加载 --以模板的形式，当然你也可以直接写在页面上读取
+					$.get(url_form_add, null, function(form) {
+						addBoxIndex = layer.open({
+							type: 1,
+							title: title_add,
+							content: form,
+							btn: ['保存', '取消'],
+							shade: false,
+							offset: ['100px', '30%'],
+							area: ['700px', '500px'],
+							zIndex: 1975,
+							maxmin: true,
+							yes: function(index) {
+                                //触发表单的提交事件
+								$('form.layui-form').find('button[lay-filter=edit]').click();
+							},
+							full: function(elem) {
+								var win = window.top === window.self ? window : parent.window;
+								$(win).on('resize', function() {
+									var $this = $(this);
+									elem.width($this.width()).height($this.height()).css({
+										top: 0,
+										left: 0
+									});
+									elem.children('div.layui-layer-content').height($this.height() - 95);
+								});
+							},
+							success: function(layero, index) {
+								//弹出窗口成功后渲染表单
+								var form = layui.form();
+								editInit();
+                                $.ajax({
+                                    type: 'get',
+                                    contentType:'application/json',
+                                    url: url_userinfo_none_contract,
+                                    success: function(data) {
+									   addListToOptions(data.userInfos);
+                                        form.render();
+                                    }
+                                });
+								form.on('submit(edit)', function(data) {
+                                    console.log(data.field);
+                                    data.field['userInfo'] = {
+                                        id: data.field['userInfo.id']
+                                    };
+
+                                    var content = layedit.getContent(editIndex);
+                                    data.field['content'] = content;
+									data.field['timeOfContract'] = data.field['formattimeOfContract'];
+                                    data.field['expirationTime'] = data.field['formatexpirationTime'];
+                                    delete (data.field['formattimeOfContract']);
+                                    delete (data.field['formatexpirationTime']);
+                                    delete (data.field['userInfo.id']);
+								    var d = JSON.stringify(data.field);
+                                    $.ajax({
+                                        type: 'post',
+										contentType:'application/json',
+                                        url: url_add,
+                                        data: d,
+                                        success: function (message) {
+                                            layer.close(index);
+                                            paging.get();
+                                        }
+                                    });
+                                    form.render();
+									return false;
+								});
+							},
+							end: function() {
+								addBoxIndex = -1;
+							}
+						});
+					});
+				});
+			});
+
+
+            layui.use('laydate', function(){
+                var laydate = layui.laydate;
+            });
+
+
+		</script>
+	</body>
+
+</html>
